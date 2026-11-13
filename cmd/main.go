@@ -19,8 +19,10 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -183,6 +185,21 @@ func main() {
 
 }
 
+func BoolEnvVar(varName string, defaultValue bool) bool {
+	value, isPresent := os.LookupEnv(varName)
+	if !isPresent {
+		return defaultValue
+	}
+	boolValue, err := strconv.ParseBool(value)
+
+	if err != nil {
+		log.Println("Error parsing env var "+varName, err)
+		return defaultValue
+	}
+
+	return boolValue
+}
+
 // Needed to serve metrics using the same cert as the webhook endpoint
 func addCertPath(tlsOpts []func(*tls.Config), certPath string) []func(*tls.Config) {
 	setupLog.Info("Initializing certificate watcher using provided certificates", "certPath", certPath)
@@ -193,7 +210,7 @@ func addCertPath(tlsOpts []func(*tls.Config), certPath string) []func(*tls.Confi
 		filepath.Join(certPath, "tls.key"),
 	)
 	if err != nil {
-		setupLog.Error(err, "failed to initialize certificate watcher")
+		setupLog.Error(err, "to initialize certificate watcher", "error", err)
 		os.Exit(1)
 	}
 
